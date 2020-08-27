@@ -1,5 +1,5 @@
 [package]
-name = "libgame"
+name = "deso_libgame"
 version = "0.1.0"
 authors = ["Spiros Makris <makris.spiros@gmail.com>"]
 edition = "2018"
