@@ -1,7 +1,11 @@
 use gdnative::prelude::*;
 
-fn init(_handle: InitHandle) {
+mod gameworld;
 
+fn init(handle: InitHandle) {
+    handle.add_class::<gameworld::GameWorld>();
 }
 
 godot_init!(init);
+
+
