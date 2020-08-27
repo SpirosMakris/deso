@@ -1,4 +1,6 @@
 use gdnative::prelude::*;
+use gd_extras::gdp;
+use gd_extras::input::InputEventExt;
 
 #[derive(NativeClass)]
 #[inherit(Node2D)]
@@ -14,12 +16,26 @@ impl GameWorld {
 
     #[export]
     pub fn _ready(&self, _owner: &Node2D) {
-        // @RMV
+        gdp!("GameWorld _ready()");
+
     }
 
     #[export]
-    pub fn _unhandled_input(&self, _owner: &Node2D, _event: Variant) {
-        // @RMV
+    pub fn _unhandled_input(&self, owner: &Node2D, event: Variant) {
+        let event = event
+            .try_to_object::<InputEvent>()
+            .expect("I expect this to be an input event");
+        
+        let event = unsafe {
+            event.assume_safe()
+        };
+        
+
+        if event.action_pressed("ui_cancel") {
+            owner
+                .get_tree()
+                .map(|tree| unsafe { tree.assume_safe() }.quit(0));
+        }
     }
 
     #[export]

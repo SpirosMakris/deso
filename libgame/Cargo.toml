@@ -11,4 +11,4 @@ crate-type = ["cdylib"]
 
 [dependencies]
 gdnative = { git = "https://github.com/godot-rust/godot-rust/" }
-
+gd_extras = { path = "../gd_extras"}

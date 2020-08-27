@@ -86,6 +86,7 @@ dependencies = [
 name = "deso_libgame"
 version = "0.1.0"
 dependencies = [
+ "gd_extras",
  "gdnative",
 ]
 
