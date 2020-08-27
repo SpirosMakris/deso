@@ -1,5 +1,4 @@
 use gdnative::api::InputEvent;
-use gdnative::prelude::*;
 
 // `InputEvent` extension
 pub trait InputEventExt {

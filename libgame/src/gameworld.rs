@@ -32,6 +32,7 @@ impl GameWorld {
         
 
         if event.action_pressed("ui_cancel") {
+            gdp!("QUIT SIGNAL");
             owner
                 .get_tree()
                 .map(|tree| unsafe { tree.assume_safe() }.quit(0));
