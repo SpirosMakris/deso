@@ -1,7 +1,6 @@
 pub mod input;
 pub mod node_ext;
 
-
 #[macro_export]
 macro_rules! gdp {
     ($($arg:tt)*) => ({

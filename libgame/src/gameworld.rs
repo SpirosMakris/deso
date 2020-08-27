@@ -1,12 +1,10 @@
-use gdnative::prelude::*;
 use gd_extras::gdp;
 use gd_extras::input::InputEventExt;
+use gdnative::prelude::*;
 
 #[derive(NativeClass)]
 #[inherit(Node2D)]
-pub struct GameWorld {
-
-}
+pub struct GameWorld {}
 
 #[methods]
 impl GameWorld {
@@ -17,7 +15,6 @@ impl GameWorld {
     #[export]
     pub fn _ready(&self, _owner: &Node2D) {
         gdp!("GameWorld _ready()");
-
     }
 
     #[export]
@@ -25,11 +22,8 @@ impl GameWorld {
         let event = event
             .try_to_object::<InputEvent>()
             .expect("I expect this to be an input event");
-        
-        let event = unsafe {
-            event.assume_safe()
-        };
-        
+
+        let event = unsafe { event.assume_safe() };
 
         if event.action_pressed("ui_cancel") {
             gdp!("QUIT SIGNAL");

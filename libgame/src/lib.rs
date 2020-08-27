@@ -1,6 +1,5 @@
 use gdnative::prelude::*;
 
-
 mod gameworld;
 mod player;
 
@@ -10,5 +9,3 @@ fn init(handle: InitHandle) {
 }
 
 godot_init!(init);
-
-
