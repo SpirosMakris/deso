@@ -1,5 +1,4 @@
 // use gdnative::GodotObject;
-use gdnative::api::AnimatedSprite;
 use gdnative::prelude::*;
 pub trait NodeExt: GodotObject + std::fmt::Debug {
     fn get_and_cast<T: GodotObject + SubClass<Node>>(&self, path: &str) -> TRef<'_, T, Shared>;
@@ -24,5 +23,6 @@ macro_rules! node_ext {
 }
 
 node_ext!(Node);
+node_ext!(Node2D);
 // node_ext!(AnimatedSprite);
 // node_ext!(KinematicBody2D);

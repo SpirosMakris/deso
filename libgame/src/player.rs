@@ -1,4 +1,4 @@
-use gdnative::api::{AnimatedSprite, ShaderMaterial, ImageTexture, Texture};
+use gdnative::api::{AnimatedSprite, ImageTexture, ShaderMaterial, Texture};
 use gdnative::prelude::*;
 
 use gd_extras::gdp;
@@ -47,7 +47,7 @@ impl Player {
     fn color_texture(&self) -> Ref<Texture, Unique> {
         gdp!("color_texture()");
 
-         let image = Image::new();
+        let image = Image::new();
         image.create(256, 256, false, Image::FORMAT_RGBA8);
 
         image.lock();

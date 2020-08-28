@@ -1,20 +1,91 @@
-use gd_extras::gdp;
 use gd_extras::input::InputEventExt;
+use gd_extras::node_ext::NodeExt;
+use gd_extras::{gd_err, gdp};
 use gdnative::prelude::*;
+
+use lazy_static::lazy_static;
+use legion::*;
+
+use std::sync::Mutex;
+
+// WORLD
+lazy_static! {
+    static ref WORLD: Mutex<World> = Mutex::new(World::default());
+}
+
+pub fn with_world<F>(mut f: F)
+where
+    F: FnMut(&mut World),
+{
+    let res = WORLD.try_lock().map(|mut world| f(&mut world));
+    if res.is_err() {
+        gd_err!("with_world: {:?}", res);
+    }
+}
+
+// RESOURCES
+pub struct Delta(pub f32);
+
+// SCHEDULES
+fn setup_process_schedule() -> Schedule {
+    Schedule::builder()
+        .add_thread_local(move_node_system())
+        .build()
+}
+
+// SYSTEMS
+// There are two types of systems that can be added in Legion
+// (three if you consider thread_local_fn).
+// A Runnable (thread local) and a Schedulable (not thread local).
+// To keep things simple anything that touches the scene tree to be part of a Runnable
+//  and everything that is just plain data to be Schedulable.
+// Note that it’s safe to touch the scene tree when adding a thread local system.
+// Therefore all systems that manipulate Godot nodes should be added with add_thread_local.
+// Components that are wrapping Godot nodes requires unsafe impl of Send and Sync.
+
+// #[derive(Debug, Copy, Clone, PartialEq)]
+pub struct Kine2Comp(Ref<KinematicBody2D, Shared>);
+
+unsafe impl Send for Kine2Comp {}
+unsafe impl Sync for Kine2Comp {}
+
+#[system(for_each)]
+fn move_node(node: &mut Kine2Comp, #[resource] delta: &Delta) {
+    let speed = 100f32;
+    let vel = Vector2::new(1.0, 0.0) * speed * delta.0;
+
+    let inner = unsafe { node.0.assume_safe() };
+    inner.global_translate(vel);
+}
 
 #[derive(NativeClass)]
 #[inherit(Node2D)]
-pub struct GameWorld {}
+pub struct GameWorld {
+    resources: Resources,
+    // physics: Schedule,
+    process: Schedule,
+}
 
 #[methods]
 impl GameWorld {
     pub fn new(_owner: &Node2D) -> Self {
-        Self {}
+        let process = setup_process_schedule();
+
+        let mut resources = Resources::default();
+        resources.insert(Delta(0.));
+
+        Self { resources, process }
     }
 
     #[export]
-    pub fn _ready(&self, _owner: &Node2D) {
+    pub fn _ready(&self, owner: &Node2D) {
         gdp!("GameWorld _ready()");
+
+        let node = owner.get_and_cast::<KinematicBody2D>("Player").claim();
+
+        with_world(|world| {
+            world.push((Kine2Comp(node),));
+        });
     }
 
     #[export]
@@ -34,12 +105,20 @@ impl GameWorld {
     }
 
     #[export]
-    pub fn _process(&self, _owner: &Node2D, _delta: f64) {
-        // @RMV
+    pub fn _process(&mut self, _owner: &Node2D, _delta: f64) {
+        // Execute all process ECS systems
+        with_world(|world| {
+            self.process.execute(world, &mut self.resources);
+        });
     }
 
     #[export]
-    pub fn _physics_process(&self, _owner: &Node2D, __delta: f64) {
-        // @RMV
+    pub fn _physics_process(&mut self, _owner: &Node2D, delta: f64) {
+        // Update Delta resource
+        self.resources
+            .get_mut::<Delta>()
+            .map(|mut d| d.0 = delta as f32);
+
+        // @TODO: Execute physics ECS systems
     }
 }

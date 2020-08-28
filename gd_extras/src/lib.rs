@@ -10,3 +10,13 @@ macro_rules! gdp {
         gdnative::godot_print!("{}:{} {}", file, line, val);
     });
 }
+
+#[macro_export]
+macro_rules! gd_err {
+    ($($arg:tt)*) => ({
+        let line = std::line!();
+        let file = std::file!();
+        let val: String = format!($($arg)*);
+        gdnative::godot_error!("{}:{} {}", file, line, val);
+    });
+}
