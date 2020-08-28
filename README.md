@@ -1,0 +1,1 @@
+cargo watch -x build -s "cp target/debug/deso_libgame.dll deso_godot/lib"
