@@ -1,7 +1,8 @@
 use gd_extras::input::InputEventExt;
-use gd_extras::node_ext::NodeExt;
 use gd_extras::{gd_err, gdp};
 use gdnative::prelude::*;
+
+use gdnative::api::{PackedScene, ResourceLoader};
 
 use lazy_static::lazy_static;
 use legion::*;
@@ -29,9 +30,29 @@ pub struct Delta(pub f32);
 // SCHEDULES
 fn setup_process_schedule() -> Schedule {
     Schedule::builder()
-        .add_thread_local(move_node_system())
+        // .add_thread_local(move_node_system())
         .build()
 }
+
+use crate::player;
+
+fn setup_physics_schedule() -> Schedule {
+    Schedule::builder()
+        .add_thread_local(player::move_player_system())
+        .build()
+}
+
+// COMPONENTS
+// #[derive(Debug, Copy, Clone, PartialEq)]
+// @COMP
+// pub struct Kine2Comp(Ref<KinematicBody2D, Shared>);
+
+// unsafe impl Send for Kine2Comp {}
+// unsafe impl Sync for Kine2Comp {}
+
+// @COMP
+#[derive(Debug, Copy, Clone)]
+pub struct Direction(pub Vector2);
 
 // SYSTEMS
 // There are two types of systems that can be added in Legion
@@ -43,26 +64,20 @@ fn setup_process_schedule() -> Schedule {
 // Therefore all systems that manipulate Godot nodes should be added with add_thread_local.
 // Components that are wrapping Godot nodes requires unsafe impl of Send and Sync.
 
-// #[derive(Debug, Copy, Clone, PartialEq)]
-pub struct Kine2Comp(Ref<KinematicBody2D, Shared>);
+// #[system(for_each)]
+// fn move_node(node: &mut Kine2Comp, #[resource] delta: &Delta) {
+//     let speed = 100f32;
+//     let vel = Vector2::new(1.0, 0.0) * speed * delta.0;
 
-unsafe impl Send for Kine2Comp {}
-unsafe impl Sync for Kine2Comp {}
-
-#[system(for_each)]
-fn move_node(node: &mut Kine2Comp, #[resource] delta: &Delta) {
-    let speed = 100f32;
-    let vel = Vector2::new(1.0, 0.0) * speed * delta.0;
-
-    let inner = unsafe { node.0.assume_safe() };
-    inner.global_translate(vel);
-}
+//     let inner = unsafe { node.0.assume_safe() };
+//     inner.global_translate(vel);
+// }
 
 #[derive(NativeClass)]
 #[inherit(Node2D)]
 pub struct GameWorld {
     resources: Resources,
-    // physics: Schedule,
+    physics: Schedule,
     process: Schedule,
 }
 
@@ -70,22 +85,41 @@ pub struct GameWorld {
 impl GameWorld {
     pub fn new(_owner: &Node2D) -> Self {
         let process = setup_process_schedule();
+        let physics = setup_physics_schedule();
 
         let mut resources = Resources::default();
         resources.insert(Delta(0.));
 
-        Self { resources, process }
+        Self {
+            resources,
+            physics,
+            process,
+        }
     }
 
     #[export]
     pub fn _ready(&self, owner: &Node2D) {
         gdp!("GameWorld _ready()");
 
-        let node = owner.get_and_cast::<KinematicBody2D>("Player").claim();
+        // let node = owner.get_and_cast::<KinematicBody2D>("Player").claim();
 
-        with_world(|world| {
-            world.push((Kine2Comp(node),));
-        });
+        // with_world(|world| {
+        //     world.push((Kine2Comp(node),));
+        // });
+
+        // Create a player
+        for i in 0..4 {
+
+            let player_position = Vector2::new(100. * i as f32 + 50., 100.);
+            let player = create_player(player_position);
+            owner.add_child(player, true);
+            
+            with_world(|world| {
+                world.push(
+                    (Direction(Vector2::new(1., 0.)), player::Player(player))
+                );
+            });
+        }
     }
 
     #[export]
@@ -119,6 +153,32 @@ impl GameWorld {
             .get_mut::<Delta>()
             .map(|mut d| d.0 = delta as f32);
 
-        // @TODO: Execute physics ECS systems
+        // Execute physics process ECS systems
+        with_world(|world| {
+            self.physics.execute(world, &mut self.resources);
+        });
     }
+}
+
+fn create_player(pos: Vector2) -> Ref<KinematicBody2D> {
+    let loader = ResourceLoader::godot_singleton();
+    let scene = loader
+        .load("res://scenes/player.tscn", "PackedScene", false)
+        .unwrap();
+
+    let scene = scene.cast::<PackedScene>().unwrap();
+
+    let scene = unsafe { scene.assume_safe() };
+
+    let instance = scene
+        .instance(PackedScene::GEN_EDIT_STATE_DISABLED)
+        .expect("Should be able to instance Player scene");
+
+    let instance = unsafe { instance.assume_safe() };
+
+    let instance = instance
+        .cast::<KinematicBody2D>()
+        .expect("Could not cast loaded scene into Kine2D");
+    instance.set_position(pos);
+    instance.claim()
 }

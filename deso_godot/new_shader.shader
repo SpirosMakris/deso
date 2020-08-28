@@ -6,4 +6,5 @@ uniform sampler2D palette: hint_albedo;
 void fragment() {
 	vec4 new_color = texture(palette, UV);
 	COLOR = mix(COLOR, new_color, mult);
+	COLOR = texture(TEXTURE, UV);
 }
