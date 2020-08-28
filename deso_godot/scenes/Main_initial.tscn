@@ -1,17 +1,18 @@
-[gd_scene load_steps=10 format=2]
+[gd_scene load_steps=11 format=2]
 
 [ext_resource path="res://libgame.gdnlib" type="GDNativeLibrary" id=1]
 [ext_resource path="res://assets/gfx/soldier_tilesheet.png" type="Texture" id=2]
 [ext_resource path="res://new_shader.shader" type="Shader" id=3]
+[ext_resource path="res://scenes/Player.gdns" type="Script" id=4]
 
 [sub_resource type="NativeScript" id=1]
 resource_name = "GameWorld"
 class_name = "GameWorld"
 library = ExtResource( 1 )
 
-[sub_resource type="ShaderMaterial" id=6]
+[sub_resource type="ShaderMaterial" id=2]
 shader = ExtResource( 3 )
-shader_param/mult = 1.0
+shader_param/mult = 0.5
 
 [sub_resource type="AtlasTexture" id=3]
 atlas = ExtResource( 2 )
@@ -29,20 +30,25 @@ animations = [ {
 "speed": 7.0
 } ]
 
-[sub_resource type="RectangleShape2D" id=2]
+[sub_resource type="RectangleShape2D" id=6]
 extents = Vector2( 27.707, 40.4218 )
 
 [node name="GameWorld" type="Node2D"]
 script = SubResource( 1 )
 
 [node name="Player" type="KinematicBody2D" parent="."]
+position = Vector2( 179.952, 135.805 )
+script = ExtResource( 4 )
+__meta__ = {
+"_edit_group_": true
+}
 
 [node name="player_sprite" type="AnimatedSprite" parent="Player"]
-material = SubResource( 6 )
+material = SubResource( 2 )
 frames = SubResource( 5 )
 animation = "walk_right"
 
 [node name="player_collision" type="CollisionShape2D" parent="Player"]
 visible = false
 position = Vector2( 0.33371, 10.345 )
-shape = SubResource( 2 )
+shape = SubResource( 6 )

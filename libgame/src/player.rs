@@ -1,4 +1,4 @@
-use gdnative::api::{AnimatedSprite, ShaderMaterial, Texture};
+use gdnative::api::{AnimatedSprite, ShaderMaterial, ImageTexture, Texture};
 use gdnative::prelude::*;
 
 use gd_extras::gdp;
@@ -17,6 +17,7 @@ impl Player {
 
     #[export]
     pub fn _unhandled_input(&self, owner: &KinematicBody2D, event: Variant) {
+        gdp!("_unhandled_input()");
         let event = event
             .try_to_object::<InputEvent>()
             .expect("InputEvent expected");
@@ -30,14 +31,36 @@ impl Player {
     }
 
     fn swap_palette(&self, owner: &KinematicBody2D) {
+        gdp!("swap_palette()");
         let animated_sprite = owner.get_and_cast::<AnimatedSprite>("player_sprite");
 
         let material = animated_sprite.material().unwrap();
         let shader_mat = material.cast::<ShaderMaterial>().unwrap();
-        let texture = self.color_texture().unwrap();
+        let shader_mat = unsafe { shader_mat.assume_safe() };
+
+        let texture = self.color_texture();
+        let texture = unsafe { texture.assume_unique() };
+
+        shader_mat.set_shader_param("palette", texture);
     }
 
-    fn color_texture(&self) -> Option<Texture> {
-        None
+    fn color_texture(&self) -> Ref<Texture, Unique> {
+        gdp!("color_texture()");
+
+         let image = Image::new();
+        image.create(256, 256, false, Image::FORMAT_RGBA8);
+
+        image.lock();
+        for y in 0..256 {
+            for x in 0..256 {
+                image.set_pixel(x, y, Color::rgb(0.0, 0.0, 0.0));
+            }
+        }
+        image.unlock();
+
+        let image_tex = ImageTexture::new();
+        image_tex.create_from_image(image, 0);
+
+        image_tex.upcast::<Texture>()
     }
 }
