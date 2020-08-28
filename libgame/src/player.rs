@@ -27,8 +27,8 @@ pub fn move_player(dir: &mut Direction, player: &mut Player, #[resource] delta_s
     // let new_position = pos.0 + Vector2::new(SPEED * delta_sec.0, 0.);
     dir.0 = dir.0.normalize();
     let vel = dir.0 * SPEED * delta_sec.0;
-    
-    let player = unsafe {player.0.assume_safe() };
+
+    let player = unsafe { player.0.assume_safe() };
     // player.translate(vel);
     player.move_and_slide_default(vel, Vector2::zero());
 }

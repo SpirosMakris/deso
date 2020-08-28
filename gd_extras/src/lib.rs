@@ -1,6 +1,6 @@
 pub mod input;
-pub mod node_ext;
 pub mod movement;
+pub mod node_ext;
 
 #[macro_export]
 macro_rules! gdp {

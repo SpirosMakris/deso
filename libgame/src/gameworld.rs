@@ -109,15 +109,12 @@ impl GameWorld {
 
         // Create a player
         for i in 0..4 {
-
             let player_position = Vector2::new(100. * i as f32 + 50., 100.);
             let player = create_player(player_position);
             owner.add_child(player, true);
-            
+
             with_world(|world| {
-                world.push(
-                    (Direction(Vector2::new(1., 0.)), player::Player(player))
-                );
+                world.push((Direction(Vector2::new(1., 0.)), player::Player(player)));
             });
         }
     }
