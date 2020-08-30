@@ -1,7 +1,7 @@
 // use gdnative::api::{AnimatedSprite, ImageTexture, ShaderMaterial, Texture};
 use gdnative::prelude::*;
 
-use gd_extras::gdp;
+// use gd_extras::gdp;
 use gd_extras::movement::Move2D;
 // use gd_extras::input::InputEventExt;
 // use gd_extras::node_ext::NodeExt;

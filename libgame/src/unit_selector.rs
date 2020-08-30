@@ -3,7 +3,7 @@ use gdnative::prelude::*;
 
 use gd_extras::gdp;
 
-const THRESHOLD: f32 = 10.;
+const THRESHOLD: f32 = 4.;
 
 fn is_dragging(start: Vector2, current: Vector2) -> bool {
     let diff = (start - current).abs();
@@ -30,6 +30,20 @@ impl UnitSelector {
     }
 
     #[export]
+    pub fn _draw(&self, owner: &Node2D) {
+        gdp!("_DRAW()");
+        if let Mouse::Drag(start, end) = self.mouse {
+            let rect = Rect2::new(start.to_point(), (end - start).to_size());
+            let color = Color::rgb(0., 1., 0.);
+            let filled = false;
+            let width = 1.0;
+            let antialised = false;
+
+            owner.draw_rect(rect, color, filled, width, antialised);
+        }
+    }
+
+    #[export]
     pub fn _unhandled_input(&mut self, owner: &Node2D, event: Variant) {
         let event = event.try_to_object::<InputEventMouse>();
         match event {
@@ -53,35 +67,37 @@ impl UnitSelector {
         match is_down {
             // Previous state match
             false => match self.mouse {
-                Mouse::Up => {}, // No change here
-                Mouse::Down(start) => {
+                Mouse::Up => {} // No change here
+                Mouse::Down(_start) => {
                     // Click
                     gdp!("MOUSE CLICK release");
                     self.mouse = Mouse::Up;
-                },
-                Mouse::Drag(start, end) => {
+                }
+                Mouse::Drag(_start, _end) => {
                     // Handle drag
                     gdp!("MOUSE DRAG release");
                     self.mouse = Mouse::Up;
-                },
+                    owner.update(); // Clears the drawn rectangle
+                }
             },
 
             true => match self.mouse {
                 Mouse::Up => {
                     // Previous was Up, so we enter down
                     self.mouse = Mouse::Down(mouse_pos);
-                },
+                }
 
                 Mouse::Down(start) => {
                     // Check if passed threshold for Dragging
                     if is_dragging(start, mouse_pos) {
                         self.mouse = Mouse::Drag(start, mouse_pos);
                     }
-                },
+                }
 
                 Mouse::Drag(_, ref mut end) => {
                     // Update end position
                     *end = mouse_pos;
+                    owner.update();
                 }
             },
         }
