@@ -37,6 +37,5 @@ frames = SubResource( 4 )
 animation = "walk_right"
 
 [node name="player_collision" type="CollisionShape2D" parent="."]
-visible = false
 position = Vector2( 0.33371, 10.345 )
 shape = SubResource( 5 )

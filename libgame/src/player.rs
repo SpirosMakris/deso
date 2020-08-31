@@ -15,11 +15,36 @@ use crate::gameworld::{Delta, Direction};
 // #[derive(NativeClass)]
 // #[inherit(KinematicBody2D)]
 // @COMP
+#[derive(Debug)]
 pub struct Player(pub Ref<KinematicBody2D, Shared>);
 
 unsafe impl Send for Player {}
 unsafe impl Sync for Player {}
 
+impl Player {
+    pub fn get_position(&self) -> Vector2 {
+        let node = unsafe { self.0.assume_safe() };
+        node.position()
+    }
+
+    pub fn mark_selected(&mut self) {
+        let color = Color::rgba(0., 0., 1., 0.5);
+        let node = unsafe { self.0.assume_safe() };
+        node.set_modulate(color);
+    }
+
+    pub fn mark_unselected(&mut self) {
+        let color = Color::rgba(1., 1., 0., 1.);
+        let node = unsafe { self.0.assume_safe() };
+        node.set_modulate(color);
+    }
+}
+
+/// @TAG
+#[derive(Debug)]
+pub struct Selected;
+
+/// @SYSTEM
 #[system(for_each)]
 pub fn move_player(dir: &mut Direction, player: &mut Player, #[resource] delta_sec: &Delta) {
     // gdp!("SYS: move_player with dT: {}", delta_sec.0);
@@ -29,8 +54,7 @@ pub fn move_player(dir: &mut Direction, player: &mut Player, #[resource] delta_s
     let vel = dir.0 * SPEED * delta_sec.0;
 
     let player = unsafe { player.0.assume_safe() };
-    // player.translate(vel);
-    player.move_and_slide_default(vel, Vector2::zero());
+    // player.move_and_slide_default(vel, Vector2::zero());
 }
 
 // #[methods]

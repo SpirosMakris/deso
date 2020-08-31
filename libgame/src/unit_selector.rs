@@ -3,6 +3,12 @@ use gdnative::prelude::*;
 
 use gd_extras::gdp;
 
+use legion::systems::CommandBuffer;
+use legion::*;
+
+use crate::gameworld::with_world;
+use crate::player::{Player, Selected};
+
 const THRESHOLD: f32 = 4.;
 
 fn is_dragging(start: Vector2, current: Vector2) -> bool {
@@ -31,7 +37,6 @@ impl UnitSelector {
 
     #[export]
     pub fn _draw(&self, owner: &Node2D) {
-        gdp!("_DRAW()");
         if let Mouse::Drag(start, end) = self.mouse {
             let rect = Rect2::new(start.to_point(), (end - start).to_size());
             let color = Color::rgb(0., 1., 0.);
@@ -56,6 +61,52 @@ impl UnitSelector {
         }
     }
 
+    fn deselect_players(&self) {
+        gdp!("Deselecting all players");
+        with_world(|world| {
+            let mut cmd = CommandBuffer::new(world);
+
+            let mut selected_query =
+                <(Entity, Write<Player>)>::query().filter(component::<Selected>());
+
+            for (entity, player) in selected_query.iter_mut(world) {
+                gdp!("*");
+                cmd.remove_component::<Selected>(*entity);
+                player.mark_unselected();
+            }
+
+            cmd.flush(world);
+            gdp!("Deselected all players");
+        });
+    }
+
+    fn select_players(&self, start: Vector2, end: Vector2) {
+        // Deselect ALL Players by removing Selected component
+        self.deselect_players();
+
+        gdp!("SELECT UNITS");
+        with_world(|world| {
+            let mut cmd = CommandBuffer::new(world);
+
+            // Select Player entities within <start, end> Rect
+
+            let mut player_query = <(Entity, Write<Player>)>::query();
+
+            for (entity, player) in player_query.iter_mut(world) {
+                let pos = player.get_position();
+
+                let rect = Rect2::new(start.to_point(), (end - start).to_size());
+                if rect.contains(pos.to_point()) {
+                    gdp!("Entity: {:?} / Player: {:?}", entity, pos);
+                    cmd.add_component(*entity, Selected);
+                    player.mark_selected();
+                }
+            }
+
+            cmd.flush(world);
+        });
+    }
+
     fn mouse_input(&mut self, owner: &Node2D, event: Ref<InputEventMouse>) {
         let event = unsafe { event.assume_safe() };
 
@@ -72,10 +123,12 @@ impl UnitSelector {
                     // Click
                     gdp!("MOUSE CLICK release");
                     self.mouse = Mouse::Up;
+                    self.deselect_players(); // Click deselects players
                 }
-                Mouse::Drag(_start, _end) => {
+                Mouse::Drag(start, end) => {
                     // Handle drag
                     gdp!("MOUSE DRAG release");
+                    self.select_players(start, end);
                     self.mouse = Mouse::Up;
                     owner.update(); // Clears the drawn rectangle
                 }
