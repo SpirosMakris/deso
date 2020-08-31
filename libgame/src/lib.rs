@@ -1,7 +1,8 @@
 use gdnative::prelude::*;
 
-mod gameworld;
-mod player;
+pub mod gameworld;
+pub mod map;
+pub mod player;
 pub mod unit_selector;
 
 fn init(handle: InitHandle) {

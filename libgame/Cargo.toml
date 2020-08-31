@@ -14,3 +14,4 @@ gdnative = { git = "https://github.com/godot-rust/godot-rust/" }
 gd_extras = { path = "../gd_extras"}
 legion = { git = "https://github.com/tomgillen/legion"}
 lazy_static = "1.4"
+bracket-pathfinding = "0.8.1"
